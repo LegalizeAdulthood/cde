@@ -366,6 +366,14 @@ tillgängliga bakgrundsfiler. Kontrollera $HOME/.dt/errorlog.
 $ _DtMessage 12 is the title of the Backdrop dialog box
 12 Arbetsinställningar - Bakgrund
 
+$ Group box for chosing style of backdrop
+13 Bakgrundstyp
+
+$ Styles of backdrop
+14 Sida vid sida
+15 Center
+16 Anpassa
+17 Fyll
 
 $set 12
 $ _DtMessage set 12 is for the Screen dialog

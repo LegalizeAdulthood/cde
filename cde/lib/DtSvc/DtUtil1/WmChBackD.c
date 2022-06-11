@@ -86,13 +86,13 @@ DtWsmChangeBackdrop (
 	char *path, 
 	Pixmap pixmap)
 {
-    return _DtWsmChangeBackdrop(display, root, path, pixmap);
+    return _DtWsmChangeBackdrop(display, root, path, pixmap, DtWSM_BACKDROP_IMAGETYPE_TILED);
 }
 
 
 /*************************************<->*************************************
  *
- *  _DtWsmChangeBackdrop (display, root, path, pixmap)
+ *  _DtWsmChangeBackdrop (display, root, path, pixmap, imageType)
  *
  *
  *  Description:
@@ -106,6 +106,7 @@ DtWsmChangeBackdrop (
  *  root	- root window of screen
  *  path	- file path to bitmap file
  *  pixmap	- pixmap id of backdrop pixmap
+ *  imageType	- Style of backdrop, tiled, center, fit or fill
  *
  *  Returns:
  *  --------
@@ -120,7 +121,8 @@ _DtWsmChangeBackdrop (
 	Display *display, 
 	Window root, 
 	char *path, 
-	Pixmap pixmap)
+	Pixmap pixmap,
+	DtWsmBackdropImageType imageType)
 {
     int rval = BadAtom;
     Window wmWindow;
@@ -147,8 +149,8 @@ _DtWsmChangeBackdrop (
 
 	pch = (char *) XtMalloc (len * sizeof(char));
 
-	sprintf (pch, "%s %s %lx", DTWM_REQ_CHANGE_BACKDROP, path,
-		    pixmap);
+	sprintf (pch, "%s %s %lx %d", DTWM_REQ_CHANGE_BACKDROP, path,
+		    pixmap, imageType);
 
 	/*
 	 * Make the request by appending the string to 

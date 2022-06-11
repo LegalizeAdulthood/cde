@@ -404,6 +404,15 @@ $ _DtMessage 12 is the title of the Backdrop dialog box
 
 12 "Gestor de estilos - Fondo"
 
+$ Group box for chosing style of backdrop
+13 Estillo de Fondo
+
+$ Styles of backdrop
+14 Mosaico
+15 Centro
+16 Ajustar
+17 Rellenar
+
 $set 12        Redefine set#
 
 $ _DtMessage set 12 is for the Screen dialog    

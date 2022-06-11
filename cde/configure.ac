@@ -429,6 +429,41 @@ AC_CHECK_LIB(Xinerama, XineramaQueryScreens,
                 [SOURCE_CPP_DEFINES="${SOURCE_CPP_DEFINES} -DUSE_XINERAMA"],
                 [AC_MSG_ERROR([libXinerama not found])], $X_LIBS)
 
+############################################################################
+# Check if support for the XRENDER extension was requested and available.
+############################################################################
+AC_ARG_ENABLE(xrender,
+   AC_HELP_STRING([--disable-xrender], [disable XRender]) )
+if test "$enable_xrender" != "no"; then
+
+#   if test "$use_pkgconfig_xrender" = "yes" ; then
+#      XRENDER_CFLAGS=`$PKGCONFIG --cflags xrender`
+#      XRENDER_LDFLAGS=`$PKGCONFIG --libs xrender`
+#   else
+    XRENDER_LDFLAGS="-lXrender"
+#   fi
+
+   AC_CHECK_HEADERS([X11/extensions/Xrender.h], [],
+      [
+         enable_xrender="no";
+         AC_MSG_WARN([unable to use X11/extensions/Xrender.h])
+      ], [
+#include <X11/Xlib.h>
+      ])
+
+fi
+if test "$enable_xrender" != "no" ; then
+   AC_CHECK_LIB(Xrender, XRenderComposite,
+      [ LDFLAGS="$LDFLAGS $XRENDER_LDFLAGS"
+        CFLAGS="$CFLAGS $XRENDER_CFLAGS"
+        SOURCE_CPP_DEFINES="${SOURCE_CPP_DEFINES} -DUSE_XRENDER"
+        enable_xrender="yes"
+        AC_DEFINE(USE_XRENDER, 1, [Define to enable the XRender extension]) ],
+      [ enable_xrender="no"
+        AC_MSG_WARN([unable to use the XRender extension]) ],
+      [ $XRENDER_LDFLAGS ])
+fi
+
 dnl Special check for tirpc...
 AC_CHECK_LIB(tirpc, svc_register,
       [CFLAGS="${CFLAGS} -DOPT_TIRPC -I/usr/include/tirpc";

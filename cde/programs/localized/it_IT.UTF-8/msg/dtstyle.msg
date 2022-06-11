@@ -377,6 +377,14 @@ file per lo sfondo dello schermo. Controllare il file $HOME/.dt/errorlog.
 $ _DtMessage 12 is the title of the Backdrop dialog box
 12 Gestione degli stili - Sfondo schermo
 
+$ Group box for chosing style of backdrop
+13 Stili de Sfondo
+
+$ Styles of backdrop
+14 Affianca
+15 Centra
+16 Adatta
+17 Riempi
 
 $set 12
 $ _DtMessage set 12 is for the Screen dialog

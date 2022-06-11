@@ -1620,6 +1620,16 @@ XtResource wmBackdropResources[] =
 	(XtPointer)NULL
     },
 
+    {
+	WmNimageType,
+	WmCImageType,
+	XtRInt,
+	sizeof (int),
+	XtOffsetOf (BackdropData, imageType),
+	XtRInt,
+	(XtPointer)DtWSM_BACKDROP_IMAGETYPE_TILED
+    },
+
 };
 
 
@@ -5122,7 +5132,11 @@ ProcessWorkspaceResources (WmWorkspaceData *pWS)
 	WmNbackdrop, WmCBackdrop, wmBackdropResources, 
 	XtNumber (wmBackdropResources), NULL, 0);
 
+    /* This call will create the backdrop windows of the correct size */
     ProcessBackdropResources (pWS, 0);
+    /* 1 = CHANGE_BACKDROP HACK this call will handle changing from the
+     * default tiled, to centered, fill or fit */
+    ProcessBackdropResources (pWS, 1);
 
 } /* END OF FUNCTION ProcessWorkspaceResources */
 

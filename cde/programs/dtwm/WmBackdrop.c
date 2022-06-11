@@ -31,6 +31,12 @@
 #define	BOTTOM			 0
 #define CHANGE_BACKDROP		(1L << 0)
 
+#if defined(USE_XRENDER)
+#include <X11/extensions/Xrender.h>
+#endif /* USE_XRENDER */
+
+#include <Dt/UserMsg.h>
+
 #include "WmGlobal.h"
 #include "WmResource.h"
 #include "WmResNames.h"
@@ -294,13 +300,137 @@ ProcessBackdropResources(
 		        XGetGeometry(
 			    display, tmpPix,
 			    &win, &x, &y, &w, &h, &bw, &depth);
-		        pWS->backdrop.imagePixmap =
-		          XCreatePixmap(display, tmpPix, w, h, depth);
 		        gc = XCreateGC(display, tmpPix, 0, NULL);
-		        status = XCopyArea(
-				XtDisplay(pWS->workspaceTopLevelW),
-				tmpPix, pWS->backdrop.imagePixmap, gc,
-				0, 0, w, h, 0, 0);
+
+			if(pWS->backdrop.imageType == DtWSM_BACKDROP_IMAGETYPE_CENTER)
+			{
+			    /* Centered */
+			    if(pWS->backdrop.window) {
+				unsigned int wbw, wdepth, wh, ww;
+				Window wwin;
+				int wx, wy;
+				/* Find the size of the containing background, to centre the pixmap
+				* within */
+				XGetGeometry(
+				  display, pWS->backdrop.window,
+				  &wwin, &wx, &wy, &ww, &wh, &wbw, &wdepth);
+
+				/* Create a pixmap the size of the whole desktop */
+				pWS->backdrop.imagePixmap =
+				  XCreatePixmap(display, tmpPix, ww, wh, depth);
+
+				/* Clear the background to a theme specific bg colour */
+				XSetForeground(display, gc, pWS->backdrop.background);
+				XFillRectangle(display, pWS->backdrop.imagePixmap, gc, 0, 0, ww, wh);
+
+				/* Copy in the pixmap to the middle, also handles the pixmap being
+				 * larger or smaller than the desktop */
+				status = XCopyArea(
+				  XtDisplay(pWS->workspaceTopLevelW),
+				  tmpPix, pWS->backdrop.imagePixmap, gc,
+				  0, 0, w, h, (ww - w) / 2, (wh - h) / 2);
+			    }
+			}
+#if defined(USE_XRENDER)
+			else if(pWS->backdrop.imageType == DtWSM_BACKDROP_IMAGETYPE_FIT
+			        || pWS->backdrop.imageType == DtWSM_BACKDROP_IMAGETYPE_FILL)
+			{
+			    int minor_version, major_version;
+
+			    /* USE_XRENDER just checks if the compile time enviroment
+			     * had the Xrender library, this runtime check makes sure
+			     * the current server has the X render extension installed
+			     * and available */
+			    if(XRenderQueryVersion(display, &minor_version, &major_version)) {
+
+				/* Fill the screen */
+				if(pWS->backdrop.window) {
+				    unsigned int wbw, wdepth, wh, ww;
+				    Window wwin;
+				    int wx, wy;
+				    double xscale;
+				    double yscale;
+				    XRenderPictureAttributes pic_attributes;
+				    Picture src_pict;
+				    Picture dst_pict;
+				    int resizedW;
+				    int resizedH;
+
+				    /* Find the size of the containing background, to centre the pixmap
+				     * within */
+				    XGetGeometry(
+				      display, pWS->backdrop.window,
+				      &wwin, &wx, &wy, &ww, &wh, &wbw, &wdepth);
+
+				    /* Create a pixmap the size of the whole desktop */
+				    pWS->backdrop.imagePixmap =
+				      XCreatePixmap(display, tmpPix, ww, wh, depth);
+
+				    /* Clear the background to a theme specific bg colour */
+				    XSetForeground(display, gc, pWS->backdrop.background);
+				    XFillRectangle(display, pWS->backdrop.imagePixmap, gc, 0, 0, ww, wh);
+
+				    /* Fill scales to the whole area */
+				    xscale = (double) w / (double) ww;
+				    yscale = (double) h / (double) wh;
+
+				    /* Whereas Fit, scales to one axis and applies that scale to both */
+				    /* preserving aspect ratio */
+				    if(pWS->backdrop.imageType == DtWSM_BACKDROP_IMAGETYPE_FIT) {
+					if(xscale > yscale) {
+					    yscale = xscale;
+					} else {
+					    xscale = yscale;
+					}
+				    }
+
+				    XTransform xform = {{
+					    { XDoubleToFixed(xscale), XDoubleToFixed(0),      XDoubleToFixed(0) },
+					    { XDoubleToFixed(0),      XDoubleToFixed(yscale), XDoubleToFixed(0) },
+					    { XDoubleToFixed(0),      XDoubleToFixed(0),      XDoubleToFixed(1.0) }
+				    }};
+
+				    /* Convert pixmaps to Pictures for Xrender */
+				    src_pict = XRenderCreatePicture(display,
+				                                    tmpPix,
+				                                    XRenderFindStandardFormat(display, PictStandardRGB24),
+				                                    0,
+				                                    &pic_attributes);
+				    dst_pict = XRenderCreatePicture(display,
+				                                    pWS->backdrop.imagePixmap,
+				                                    XRenderFindStandardFormat(display, PictStandardRGB24),
+				                                    0,
+				                                    &pic_attributes);
+
+				    if(src_pict && dst_pict) {
+					XRenderSetPictureTransform(display, src_pict, &xform);
+
+					resizedW = (double) w / xscale;
+					resizedH = (double) h / yscale;
+
+					XRenderComposite(display, PictOpOver,
+					                 src_pict, 0, dst_pict, /* src, mask, dest */
+					                 0, 0, /* src xy (in destination space!) */
+					                 0, 0, /* mask xy */
+					                 (ww - resizedW) / 2, (wh - resizedH) / 2, ww, wh);
+				    }
+
+				    if(src_pict) { XRenderFreePicture(display, src_pict); }
+				    if(dst_pict) { XRenderFreePicture(display, dst_pict); }
+				}
+			    }
+			}
+#endif /* USE_XRENDER */
+			else
+			{
+			    /* Tiled */
+			    pWS->backdrop.imagePixmap =
+			      XCreatePixmap(display, tmpPix, w, h, depth);
+			    status = XCopyArea(
+			      XtDisplay(pWS->workspaceTopLevelW),
+			      tmpPix, pWS->backdrop.imagePixmap, gc,
+			      0, 0, w, h, 0, 0);
+			}
 		        XFreeGC(display, gc);
 		    }
 
@@ -346,7 +476,7 @@ ProcessBackdropResources(
 		    if (pWS->backdrop.imagePixmap !=
 			    XmUNSPECIFIED_PIXMAP)
 		    {
-			xswa.override_redirect = True;    
+			xswa.override_redirect = True;
 			xswa.background_pixmap = 
 			    pWS->backdrop.imagePixmap; 
 			xswamask = CWOverrideRedirect | CWBackPixmap;
@@ -541,7 +671,7 @@ FullBitmapFilePath(
 
 /******************************<->*************************************
  *
- *  SetNewBackdrop (pWS, pixmap, aName)
+ *  SetNewBackdrop (pWS, pixmap, aName, imageType)
  *
  *  Description:
  *  -----------
@@ -552,6 +682,7 @@ FullBitmapFilePath(
  *  pWS = pointer to workspace data
  *  pixmap = pixmap for the backdrop (if any)
  *  aName = atomized name for the backdrop (either file name or "none")
+ *  imageType = Style of backdrop, tiled, center, fit or fill
  * 
  *  Outputs:
  *  -------
@@ -566,7 +697,8 @@ void
 SetNewBackdrop(
         WmWorkspaceData *pWS,
         Pixmap pixmap,
-        String bitmapFile )
+        String bitmapFile,
+        DtWsmBackdropImageType imageType )
 {
     String pchNewBitmap = NULL;
 
@@ -604,6 +736,7 @@ SetNewBackdrop(
 	
     pWS->backdrop.imagePixmap = pixmap;
     pWS->backdrop.image = pchNewBitmap;
+    pWS->backdrop.imageType = imageType;
 
     ProcessBackdropResources (pWS, CHANGE_BACKDROP);
 
@@ -614,6 +747,7 @@ SetNewBackdrop(
 
     ChangeBackdrop (pWS);
     SaveWorkspaceResources (pWS, WM_RES_BACKDROP_IMAGE);
+    SaveWorkspaceResources (pWS, WM_RES_BACKDROP_IMAGETYPE);
 
     SetWorkspaceInfoProperty (pWS);
 

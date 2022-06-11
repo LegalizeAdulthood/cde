@@ -38,7 +38,8 @@ extern String FullBitmapFilePath(
 extern void SetNewBackdrop( 
                         WmWorkspaceData *pWS,
                         Pixmap pixmap,
-                        String bitmapFile) ;
+                        String bitmapFile,
+                        DtWsmBackdropImageType imageType) ;
 extern Boolean IsBackdropWindow( 
                         WmScreenData *pSD,
                         Window win) ;

@@ -63,6 +63,7 @@
 #include "WmResParse.h"
 #include "WmParse.h"
 #include "WmParseP.h"
+#include "Dt/Wsm.h"
 
 #include <Xm/RowColumnP.h> /* for MS_LastManagedMenuTime */
 extern XmMenuState _XmGetMenuState();
@@ -1998,6 +1999,7 @@ HandleDtWmRequest (WmScreenData *pSD, XEvent *pev)
 			strlen(DTWM_REQ_CHANGE_BACKDROP)))
 	    {
 		Pixmap pixmap = None;
+		DtWsmBackdropImageType imageType = DtWSM_BACKDROP_IMAGETYPE_TILED;
 		char *pch;
 		char *pchFile = NULL;
 
@@ -2025,7 +2027,18 @@ HandleDtWmRequest (WmScreenData *pSD, XEvent *pev)
 		    if (pch) 
 		    {
 			sscanf (pch, "%lx", &pixmap);  
-			SetNewBackdrop (ACTIVE_WS, pixmap, (String)pchFile);
+
+			pch = strtok (NULL, " ");
+			if (pch)
+			{
+			    sscanf (pch, "%d", (int *) &imageType);
+
+			    SetNewBackdrop (ACTIVE_WS, pixmap, (String)pchFile, imageType);
+			}
+			else
+			{
+			    Warning (((char *)GETMESSAGE(32, 5, "Missing backdrop image style number for backdrop change request.")));
+			}
 		    }
 		    else 
 		    {

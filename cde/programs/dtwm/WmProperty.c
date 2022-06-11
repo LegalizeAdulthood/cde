@@ -1322,7 +1322,7 @@ SetWorkspaceInfoProperty (WmWorkspaceData *pWS)
      *     number of backdrop windows
      *     list of backdrop windows
      */
-    iNumStrings =  6;	/* number of fields minus backdrop window(s) */
+    iNumStrings =  7;	/* number of fields minus backdrop window(s) */
     count = 1;		/* number of backdrop windows */
     iNumStrings += count;
 
@@ -1354,6 +1354,11 @@ SetWorkspaceInfoProperty (WmWorkspaceData *pWS)
     /* backdrop name */
     ix = (i * WIP_NUMBER_SIZE);
     sprintf (&pch[ix], "0x%lx", pWS->backdrop.nameAtom);
+    ppchList[i++] = &pch[ix];
+
+    /* backdrop type */
+    ix = (i * WIP_NUMBER_SIZE);
+    sprintf (&pch[ix], "%d", pWS->backdrop.imageType);
     ppchList[i++] = &pch[ix];
 
     /* number of backdrop windows */

@@ -408,6 +408,15 @@ $ _DtMessage 12 is the title of the Backdrop dialog box
 
 12 "Umgebungsverwaltung - Hintergrund"
 
+$ Group box for chosing style of backdrop
+13 Hintergrundstil
+
+$ Styles of backdrop
+14 Kachel
+15 Zentriert
+16 Anpassen
+17 Ausfüllen
+
 $set 12        Redefine set#
 
 $ _DtMessage set 12 is for the Screen dialog  

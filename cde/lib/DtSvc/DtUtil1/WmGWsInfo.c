@@ -184,6 +184,13 @@ DtWsmGetWorkspaceInfo(
 		    item++;
 		}
 
+		/* imageType */
+		if (item < count)
+		{
+		    pWsInfo->imageType = atoi (ppchList[item]);
+		    item++;
+		}
+
 		/* number of backdrop windows */
 		if (item < count)
 		{

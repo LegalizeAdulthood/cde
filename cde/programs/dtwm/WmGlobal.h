@@ -331,6 +331,7 @@ extern Pixel		FPselectcolor;
 #define WM_RES_FP_POSITION      	(1L << 4)
 #define WM_RES_ICONBOX_GEOMETRY      	(1L << 5)
 #define WM_RES_WORKSPACE_COUNT		(1L << 6)
+#define WM_RES_BACKDROP_IMAGETYPE	(1L << 7)
 
 
 
@@ -1352,6 +1353,7 @@ typedef struct _WmBackdropData
     int			colorSet;		/* resource */
     Pixel 		background;		/* resource */
     Pixel 		foreground;		/* resource */
+    DtWsmBackdropImageType imageType;		/* resource */
     unsigned int	flags;
     Window		window;
 } BackdropData;

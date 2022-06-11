@@ -3443,6 +3443,25 @@ SaveWorkspaceResources(
 	AddStringToResourceData (buffer, &data, &cum_len);
     }
 
+    if (flags & WM_RES_BACKDROP_IMAGETYPE)
+    {
+        iLen = (strlen (res_class) + strlen (screenName) +
+	     strlen (pWS->name) + strlen (WmNbackdrop) +
+	     strlen (WmNimageType) + 22);
+
+	if (iLen > bufferLength)
+	{
+	    bufferLength += iLen;
+	    buffer = (char *)
+		XtRealloc (buffer, bufferLength * sizeof(char));
+	}
+
+	sprintf (buffer, "%s%s*%s*%s*%s:  %d\n", res_class,
+		screenName, pWS->name,
+		WmNbackdrop, WmNimageType, pWS->backdrop.imageType);
+
+	AddStringToResourceData (buffer, &data, &cum_len);
+    }
 
     if (flags & WM_RES_WORKSPACE_TITLE)
     {

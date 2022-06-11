@@ -189,7 +189,7 @@ $ YOU DON'T NEED TO LOCALIZE THIS SET.
 2 Insufficient memory to handle backdrop change.
 3 Missing path name for backdrop change request.
 4 Missing pixmap id for backdrop change request.
-
+5 Missing backdrop image style number for backdrop change request.
 
 $set 34
 $    THIS COMMENT FOR DTWM TEAM ONLY -- WmIPlace.c --

@@ -64,6 +64,8 @@
 #include <Xm/List.h>
 #include <Xm/VendorSEP.h>
 #include <Xm/AtomMgr.h>
+#include <Xm/RowColumn.h>
+#include <Xm/ToggleBG.h>
 
 #include <Dt/DialogBox.h>
 
@@ -73,6 +75,7 @@
 #include <Dt/Wsm.h>
 #include <Dt/UserMsg.h>
 #include <Dt/WsmP.h>
+#include <Dt/TitleBox.h>
 
 #include "Help.h"
 #include "Main.h"
@@ -138,6 +141,14 @@ static void _DtMapCB(
 
 typedef struct {
     Widget   drawnButton;
+    Widget   imageStyleTB;
+    Widget   imageTypeRC;
+    Widget   tiledTG;
+    Widget   centeredTG;
+#if defined(USE_XRENDER)
+    Widget   fitTG;
+    Widget   fillTG;
+#endif /* USE_XRENDER */
     char   **dirList;
     int      dirCount;
     char   **tmpBitmapNames;
@@ -288,6 +299,24 @@ void SelectCurrentBackdrop(int callback)
       }
     }
 
+    switch(wInfo->imageType) {
+#if defined(USE_XRENDER)
+	case DtWSM_BACKDROP_IMAGETYPE_FILL:
+	  XmToggleButtonGadgetSetState(backdrops.fillTG,     True, False);
+	  break;
+	case DtWSM_BACKDROP_IMAGETYPE_FIT:
+	  XmToggleButtonGadgetSetState(backdrops.fitTG,      True, False);
+	  break;
+#endif /* USE_XRENDER */
+	case DtWSM_BACKDROP_IMAGETYPE_CENTER:
+	  XmToggleButtonGadgetSetState(backdrops.centeredTG, True, False);
+	  break;
+	case DtWSM_BACKDROP_IMAGETYPE_TILED:
+	default:
+	  XmToggleButtonGadgetSetState(backdrops.tiledTG,    True, False);
+	  break;
+    }
+
     XtFree((char *) backdropName);
     XtFree((char *) wInfo);
 }
@@ -342,6 +371,8 @@ CreateBackdropDialog(
     XmString        *listStrings;
     char            *bd_desc;
     char            *lang;
+    XmString         string;
+    Widget           imageStyleForm;
 
 
     if (backdrops.noBitmaps) 
@@ -472,6 +503,58 @@ CreateBackdropDialog(
     XtSetArg (args[n], XmNallowOverlap, False);  n++;
     mainForm = XmCreateForm (style.backdropDialog, "backdropsForm", args, n);
 
+    n = 0;
+    string = CMPSTR((char *)GETMESSAGE(11, 13, "Backdrop Style"));
+    XtSetArg (args[n], XmNtitleString, string);                   n++;
+    XtSetArg (args[n], XmNtopAttachment, XmATTACH_FORM);          n++;
+    XtSetArg (args[n], XmNrightAttachment, XmATTACH_FORM);        n++;
+    XtSetArg (args[n], XmNbottomAttachment, XmATTACH_FORM);       n++;
+    backdrops.imageStyleTB
+        = _DtCreateTitleBox(mainForm, "imageStyleTB", args, n);
+    XmStringFree(string);
+
+    n = 0;
+    XtSetArg(args[n], XmNallowOverlap, False);    n++;
+    XtSetArg(args[n], XmNchildType, XmWORK_AREA); n++;
+    imageStyleForm =
+        XmCreateForm(backdrops.imageStyleTB, "imageStyleForm", args, n);
+
+    n = 0;
+    XtSetArg(args[n], XmNmarginWidth, 0);  n++;
+    XtSetArg(args[n], XmNmarginHeight, 0); n++;
+    backdrops.imageTypeRC =
+        XmCreateRadioBox(imageStyleForm, "imageTypeRC", args, n);
+
+    n = 0;
+    string = CMPSTR((char *)GETMESSAGE(11, 14, "Tiled"));
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    backdrops.tiledTG =
+        XmCreateToggleButtonGadget(backdrops.imageTypeRC, "tiledTG", args, n);
+    XmStringFree(string);
+
+    n = 0;
+    string = CMPSTR((char *)GETMESSAGE(11, 15, "Center"));
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    backdrops.centeredTG =
+        XmCreateToggleButtonGadget(backdrops.imageTypeRC, "centeredTG", args, n);
+    XmStringFree(string);
+
+#if defined(USE_XRENDER)
+    n = 0;
+    string = CMPSTR((char *)GETMESSAGE(11, 16, "Fit"));
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    backdrops.fitTG =
+        XmCreateToggleButtonGadget(backdrops.imageTypeRC, "fitTG", args, n);
+    XmStringFree(string);
+
+    n = 0;
+    string = CMPSTR((char *)GETMESSAGE(11, 17, "Fill"));
+    XtSetArg(args[n], XmNlabelString, string); n++;
+    backdrops.fillTG =
+        XmCreateToggleButtonGadget(backdrops.imageTypeRC, "fillTG", args, n);
+    XmStringFree(string);
+#endif /* USE_XRENDER */
+
     /* create the scrolled list of bitmap names... first create XmStrings */
     listStrings = MakeListStrings ();
     n = 0;
@@ -486,7 +569,8 @@ CreateBackdropDialog(
     /* set up attachments for scrolled list itself */
     n = 0;
     XtSetArg (args[n], XmNtopAttachment, XmATTACH_FORM);          n++;
-    XtSetArg (args[n], XmNrightAttachment, XmATTACH_FORM);        n++;
+    XtSetArg (args[n], XmNrightAttachment, XmATTACH_WIDGET);      n++;
+    XtSetArg (args[n], XmNrightWidget, backdrops.imageStyleTB);   n++;
     XtSetArg (args[n], XmNbottomAttachment, XmATTACH_FORM);       n++;
     XtSetValues (XtParent(list), args, n);
 
@@ -512,6 +596,15 @@ CreateBackdropDialog(
     XtManageChild (mainForm);
     XtManageChild (backdrops.drawnButton);
     XtManageChild (list);
+    XtManageChild(backdrops.imageStyleTB);
+    XtManageChild(imageStyleForm);
+    XtManageChild(backdrops.imageTypeRC);
+    XtManageChild(backdrops.tiledTG);
+    XtManageChild(backdrops.centeredTG);
+#if defined(USE_XRENDER)
+    XtManageChild(backdrops.fitTG);
+    XtManageChild(backdrops.fillTG);
+#endif /* USE_XRENDER */
 
     return 1;
 }
@@ -974,8 +1067,23 @@ ButtonCB(
 {
     int      n, num;
     Arg      args[MAX_ARGS];
+    DtWsmBackdropImageType imageType;
 
     DtDialogBoxCallbackStruct *cb = (DtDialogBoxCallbackStruct *) call_data;
+
+#if defined(USE_XRENDER)
+    if(XmToggleButtonGadgetGetState(backdrops.fillTG)) {
+	imageType = DtWSM_BACKDROP_IMAGETYPE_FILL;
+    } else if (XmToggleButtonGadgetGetState(backdrops.fitTG)) {
+	imageType = DtWSM_BACKDROP_IMAGETYPE_FIT;
+    } else
+#endif /* USE_XRENDER */
+    if (XmToggleButtonGadgetGetState(backdrops.centeredTG)) {
+	imageType = DtWSM_BACKDROP_IMAGETYPE_CENTER;
+    } else {
+	/* Default to tiled */
+	imageType = DtWSM_BACKDROP_IMAGETYPE_TILED;
+    }
 
     switch (cb->button_position)
     {
@@ -986,7 +1094,8 @@ ButtonCB(
 
           _DtWsmChangeBackdrop(style.display, style.root, 
                              backdrops.bitmapNames[num], 
-                             backdrops.bitmaps[num]);
+                             backdrops.bitmaps[num],
+                             imageType);
           break;
 
       case B_OK_BUTTON:  
@@ -996,7 +1105,8 @@ ButtonCB(
 
           _DtWsmChangeBackdrop(style.display, style.root,
                              backdrops.bitmapNames[num],
-                             backdrops.bitmaps[num]);
+                             backdrops.bitmaps[num],
+                             imageType);
           XtUnmanageChild(w);
           break;
 

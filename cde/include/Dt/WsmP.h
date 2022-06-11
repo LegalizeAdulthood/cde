@@ -447,7 +447,7 @@ _DtWmRestart(
 
 /*************************************<->*************************************
  *
- *  int _DtWsmChangeBackdrop (display, root, path, pixmap)
+ *  int _DtWsmChangeBackdrop (display, root, path, pixmap, imageType)
  *
  *
  *  Description:
@@ -461,6 +461,7 @@ _DtWmRestart(
  *  root	- root window of screen
  *  path	- file path to bitmap file
  *  pixmap	- pixmap id of backdrop pixmap
+ *  imageType	- Style of backdrop, tiled, center, fit or fill
  *
  *  Returns:
  *  --------
@@ -472,7 +473,8 @@ _DtWsmChangeBackdrop (
 	Display *display, 
 	Window root, 
 	char *path, 
-	Pixmap pixmap);
+	Pixmap pixmap,
+	DtWsmBackdropImageType imageType);
 
 /*************************************<->*************************************
  *

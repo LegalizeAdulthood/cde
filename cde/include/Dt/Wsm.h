@@ -52,9 +52,18 @@ extern "C" {
 #define DtWSM_REASON_CURRENT	4
 
 
+
 /*
  * Types
  */
+
+/* Which style is the workspace background image */
+typedef enum {
+  DtWSM_BACKDROP_IMAGETYPE_TILED  = 0,
+  DtWSM_BACKDROP_IMAGETYPE_CENTER = 1,
+  DtWSM_BACKDROP_IMAGETYPE_FIT    = 2,
+  DtWSM_BACKDROP_IMAGETYPE_FILL   = 3
+} DtWsmBackdropImageType;
 
 /* Workspace property information */
 
@@ -67,6 +76,7 @@ typedef struct _DtWsmWorkspaceInfo {
 	char		*pchTitle;
 	Window		*backdropWindows;
 	int		numBackdropWindows;
+	DtWsmBackdropImageType	imageType; /**< Tiled, Center, Fit, Fill */
 } DtWsmWorkspaceInfo;
 
 

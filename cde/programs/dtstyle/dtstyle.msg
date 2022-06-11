@@ -381,6 +381,14 @@ files available. Check $HOME/.dt/errorlog.
 $ _DtMessage 12 is the title of the Backdrop dialog box
 12 Style Manager - Backdrop
 
+$ Group box for chosing style of backdrop
+13 Backdrop Style
+
+$ Styles of backdrop
+14 Tiled
+15 Centered
+16 Fit
+17 Fill
 
 $set 12
 $ _DtMessage set 12 is for the Screen dialog
